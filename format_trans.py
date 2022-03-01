@@ -55,8 +55,13 @@ class FileUtils:
         if not os.path.exists(f"./Sounding/{station}/{year}/{month}"):
             os.mkdir(f"./Sounding/{station}/{year}/{month}")
 
-        trans_log.logger.info(f"保存结果文件{station}_20{filename[:-4]}0000.txt")
-        df.to_csv(f"./Sounding/{station}/{year}/{month}/{station}_20{filename[:-4]}0000.txt", sep='\t', index=False)
+        trans_log.logger.info(f"保存结果文件{station}_20{filename[:-4]}0000SURP.txt")
+        df.to_csv(f"./Sounding/{station}/{year}/{month}/{station}_20{filename[:-4]}0000SURP.txt", sep=' ', index=False)
+
+        with open(f"./Sounding/{station}/{year}/{month}/{station}_20{filename[:-4]}0000SURP.txt", "r+") as f:
+            content = f.read()
+            f.seek(0, 0)
+            f.write("ECthin Query Data\n" + content)
 
 
 class EcToSounding:
@@ -208,9 +213,11 @@ class EcToSounding:
 
                 # 数据文件可能存在多种格式，分别处理
                 try:
-                    T_line_count = len(open(T_full_path, 'r').readlines())
-                    R_line_count = len(open(R_full_path, 'r').readlines())
+                    T_line_count = len(open(T_full_path, 'r', encoding='gb2312').readlines())
+                    R_line_count = len(open(R_full_path, 'r', encoding='gb2312').readlines())
                 except FileNotFoundError:
+                    continue
+                except UnicodeError:
                     continue
 
                 if T_line_count == grid_point_cnt + 3:
@@ -274,7 +281,6 @@ class EcToSounding:
 class SoundingToMono:
     @staticmethod
     def sounding2mono():
-
 
         shutil.rmtree(TEMP_DIR, ignore_errors=True)
         os.makedirs(TEMP_DIR, exist_ok=True)
@@ -453,5 +459,5 @@ class SoundingToMono:
 
 
 if __name__ == '__main__':
-    # EcToSounding.ec2sounding()
-    SoundingToMono.sounding2mono()
+    EcToSounding.ec2sounding()
+    # SoundingToMono.sounding2mono()
