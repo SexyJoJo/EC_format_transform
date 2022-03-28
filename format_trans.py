@@ -1,6 +1,5 @@
 import math
 import shutil
-
 import pandas as pd
 import CONST
 import os.path
@@ -49,14 +48,20 @@ class FileUtils:
         """保存df为txt文件"""
         year = '20' + filename[:2]
         month = filename[2:4]
-        if not os.path.exists(f"./Sounding/{station}/{year}"):
-            os.mkdir(f"./Sounding/{station}/{year}")
 
         if not os.path.exists(f"./Sounding/{station}/{year}/{month}"):
-            os.mkdir(f"./Sounding/{station}/{year}/{month}")
+            os.makedirs(f"./Sounding/{station}/{year}/{month}")
+
+        # if not os.path.exists(f"./ToTrain/{station}/{year}/{month}"):
+        #     os.makedirs(f"./ToTrain/{station}/{year}/{month}")
 
         trans_log.logger.info(f"保存结果文件{station}_20{filename[:-4]}0000SURP.txt")
-        df.to_csv(f"./Sounding/{station}/{year}/{month}/{station}_20{filename[:-4]}0000SURP.txt", sep=' ', index=False)
+        df.to_csv(f"./Sounding/{station}/{year}/{month}/{station}_20{filename[:-4]}0000SURP.txt",
+                  sep=' ', index=False)
+
+        # trans_log.logger.info(f"保存中间文件{station}_20{filename[:-4]}0000.txt")
+        # df.iloc[:, 1:].to_csv(f"./ToTrain/{station}/{year}/{month}/{station}_20{filename[:-4]}0000.txt",
+        #                       sep=' ', index=False, header=0)
 
         with open(f"./Sounding/{station}/{year}/{month}/{station}_20{filename[:-4]}0000SURP.txt", "r+") as f:
             content = f.read()
@@ -257,6 +262,11 @@ class EcToSounding:
     @staticmethod
     def ec2sounding():
         """ec原始文件转化为探空格式文件"""
+        # 检查路径是否存在
+        if not os.path.exists(CONST.EC_path):
+            trans_log.logger.info("文件路径不存在，请在CONST.py中重新配置")
+            return
+
         # 获取文件头的元数据信息
         trans_log.logger.info("读取文件头部信息")
         loc_info = FileUtils.get_file_header(CONST.EC_path)
@@ -299,7 +309,11 @@ class SoundingToMono:
                     os.makedirs(out_dir, exist_ok=True)
 
                     # 计算83层高度数组
-                    alt = CONST.DEV_ALT[int(split_path[1])]  # 海拔高度
+                    try:
+                        alt = CONST.DEV_ALT[int(split_path[1])]  # 海拔高度
+                    except KeyError:
+                        print("当前站点配置缺失")
+                        break
                     base_height = [1, 25, 50, 75, 100, 125, 150, 175, 200, 225, 250, 275, 300, 325, 350, 375, 400, 425,
                                    450, 475,
                                    500, 550, 600, 650, 700, 750, 800, 850, 900, 950, 1000, 1050, 1100, 1150, 1200, 1250,
@@ -331,7 +345,7 @@ class SoundingToMono:
     @staticmethod
     def do_process(filedir, input_file, height, out_dir, alt):
         height_list_m = [i * 1000 for i in height]
-        df = pd.read_table(filedir, skiprows=1, header=None).iloc[:, 1:]
+        df = pd.read_table(filedir, skiprows=2, sep=" ", header=None).iloc[:, 1:]
         df.columns = [0, 1, 2, 3]
         SoundingToMono.convert_numberic(df, [0, 1, 2, 3])
         base_height = df[3].min() - 1
@@ -361,7 +375,7 @@ class SoundingToMono:
         for col in cols:
             df[col] = pd.to_numeric(df[col], errors='coerce')
 
-    @ staticmethod
+    @staticmethod
     def rewrite_monoRTM_template(equip_record_alt):
         # format：83层高度层及template模板文件
         base_height = [1, 25, 50, 75, 100, 125, 150, 175, 200, 225, 250, 275, 300, 325, 350, 375, 400, 425, 450, 475,
