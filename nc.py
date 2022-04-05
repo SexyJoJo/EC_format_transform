@@ -2,13 +2,12 @@ import os
 from datetime import datetime, timedelta
 import netCDF4
 import pandas as pd
-
 import CONST
 from format_trans import EcToSounding
 
 def get_time(delta):
     start = datetime(1900, 1, 1)
-    delta = timedelta(hours=int(delta)+8)
+    delta = timedelta(hours=int(delta))
     return start + delta
 
 def get_loc_meta(dataset):
