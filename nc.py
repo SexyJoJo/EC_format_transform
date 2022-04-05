@@ -7,7 +7,7 @@ from format_trans import EcToSounding
 
 def get_time(delta):
     start = datetime(1900, 1, 1)
-    delta = timedelta(hours=int(delta))
+    delta = timedelta(hours=int(delta)+8)
     return start + delta
 
 def get_loc_meta(dataset):
