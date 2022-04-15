@@ -193,7 +193,7 @@ class EcToSounding:
             if R_line_count == grid_point_cnt + 3:
                 R_df = pd.read_table(R_full_path, skiprows=3, sep=r'\s+', header=0)
             elif R_line_count == 2 * grid_point_cnt + 5:
-                R_df = pd.read_table(T_full_path, skiprows=3, sep=r'\s+', header=1)
+                R_df = pd.read_table(R_full_path, skiprows=3, sep=r'\s+', header=1)
             else:
                 continue
 
@@ -473,5 +473,6 @@ class SoundingToMono:
 
 
 if __name__ == '__main__':
+    # CONST.py中配置目录
     EcToSounding.ec2sounding()
     # SoundingToMono.sounding2mono()
